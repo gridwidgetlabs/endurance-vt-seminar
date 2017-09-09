@@ -5,7 +5,7 @@ from endurance.core.modeling.macros.scaling import *
 from endurance.core.simulation.solution_parameters import NewtonRaphsonSolutionParameters
 from endurance.core.subsystems.base import SubsystemDataSeries
 
-
+# settings
 dispatch_mw_tolerance = 5.0
 max_dispatch_iterations = 5
 
@@ -46,6 +46,9 @@ def run(scenario, percent_increment, iteration_limit):
 
 
 def _set_solution_parameters():
+    """
+    Sets the desired solution parameters for the power flow solver used in the analysis
+    """
     solution_parameters = NewtonRaphsonSolutionParameters()
     solution_parameters.max_iterations = 50
     solution_parameters.mismatch_convergence_tolerance = 3.0
@@ -53,6 +56,9 @@ def _set_solution_parameters():
 
 
 def _cache_bus_data():
+    """
+    Caches all of the bus data from the case.
+    """
     data = BusData()
     data.read_all()
     data.block_read = True
@@ -60,6 +66,15 @@ def _cache_bus_data():
 
 
 def _scale_loads(case, original_loads, scaling_factor):
+    """
+    Scales the load records individually based on the original load values and a scaling factor.
+    :param case: The :class:`Case` that is synchronized with the current loaded case.
+    :type case: :class:`Case`
+    :param original_loads: The original loading values from the seed case.
+    :type: dict{(int, str): dict{str: float}}
+    :param scaling_factor: The per unit multiplier for each of the loads.
+    :type scaling_factor: float
+    """
     for load in case.loads:
         base_mw = original_loads[load.key]['MW']
         base_mvar = original_loads[load.key]['MVAR']
@@ -68,6 +83,13 @@ def _scale_loads(case, original_loads, scaling_factor):
 
 
 def _calculate_total_load(case):
+    """
+    Computes the total nominal load for the currently loaded case.
+    :param case: The :class:`Case` that is synchronized with the current loaded case.
+    :type case: :class:`Case`
+    :return: The total MW load for the currently loaded case.
+    :rtype: float
+    """
     total_load_mw = 0
     for load in case.loads:
         if load.status:
@@ -76,6 +98,13 @@ def _calculate_total_load(case):
 
 
 def _redispatch(case, mw_to_dispatch):
+    """
+    Redispatches the generation in the currently loaded case based on inertia.
+    :param case: The :class:`Case` that is synchronized with the current loaded case.
+    :type case: :class:`Case`
+    :param mw_to_dispatch: The amount of real power, in MW, that has been displaced and requires redispatch.
+    :type mw_to_dispatch: float
+    """
     remaining_mw_to_dispatch = mw_to_dispatch
     total_dispatchable_mw_max = _calculate_total_dispatchable_mw(case)
     already_dispatched_mw = 0
@@ -97,6 +126,14 @@ def _redispatch(case, mw_to_dispatch):
 
 
 def _calculate_total_dispatchable_mw(case):
+    """
+    Calculates the total available MW for dispatch. This is equal to the total remaining capacity of all
+    in-service, non-swing generators.
+    :param case: The :class:`Case` that is synchronized with the current loaded case.
+    :type case: :class:`Case`
+    :return: The total remaining dispatchable capacity in the case, in MW.
+    :rtype: float
+    """
     total_dispatchable_mw_max = 0
     swing = case.swing
     for machine in case.machines:
@@ -107,6 +144,13 @@ def _calculate_total_dispatchable_mw(case):
 
 
 def _cache_original_loads(case):
+    """
+    Stores the original value of all of the load records from the seed case.
+    :param case: The :class:`Case` that is synchronized with the current loaded case.
+    :type case: :class:`Case`
+    :return: The original load values
+    :rtype: dict{(int, str): dict{str: float}}
+    """
     original_loads = {}
     for load in case.loads:
         original_loads[load.key] = {'MW': load.constant_P_mw,

@@ -28,5 +28,4 @@ def run():
 
     reports.create(results)
 
-    # stop PSSE from running (helpful for hourly licenses)
     return results

@@ -65,6 +65,10 @@ def _create_fixed_shunt_outage_scenario(bus_number, identifier):
 
 
 def _get_fixed_shunt_keys():
+    """
+    :return: The key tuples for the fixed shunt records in the seed case.
+    :rtype: [(int, str)]
+    """
     seed_case.read()
     case = Case(autoinit=True)
     keys = []
